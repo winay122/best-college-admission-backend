@@ -1,0 +1,218 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(STAFF)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+model College {
+  id                  String     @id @default(uuid())
+  name                String
+  city                String
+  state               String
+  logoUrl             String
+  
+  // High-Level Display
+  priorityScore       Int        @default(0)
+  status              CollegeStatus @default(PUBLISHED)
+  
+  // 1:1 Encapsulated Relations
+  info                CollegeInfo?
+  placement           Placement?
+
+  // 1:Many Encapsulated Relations
+  courses             Course[]
+  galleries           GalleryImage[]
+  rankings            Ranking[]
+  enquiries           Enquiry[]
+  accreditations      Accreditation[]
+  deadlines           Deadline[]
+  faqs                Faq[]
+
+  // Affiliation Details
+  universityId        String?
+  university          University? @relation(fields: [universityId], references: [id], onDelete: SetNull)
+  collegeType         String?     // e.g. "Affiliated", "Autonomous"
+
+  // Amenities built-in array for quick filtering
+  facilities          String[]
+  hostelAvailable     Boolean    @default(false)
+  
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+}
+
+enum CollegeStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model CollegeInfo {
+  id              String   @id @default(uuid())
+  collegeId       String   @unique
+  college         College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  
+  aboutHtml       String?  @db.Text
+  highlightsHtml  String?  @db.Text
+  admissionsHtml  String?  @db.Text
+  scholarshipHtml String?  @db.Text
+}
+
+model Placement {
+  id              String   @id @default(uuid())
+  collegeId       String   @unique
+  college         College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  
+  highestPackage   Float?
+  averagePackage   Float?
+  placementPercent Float?
+  topRecruiters    String[]
+}
+
+model Course {
+  id              String   @id @default(uuid())
+  collegeId       String
+  college         College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  
+  degreeId        String?  // Made optional momentarily to preserve existing ghost-row DB data
+  degree          Degree?  @relation(fields: [degreeId], references: [id], onDelete: SetNull)
+  
+  name            String
+  duration        String?
+  eligibility     String?  @db.Text
+  originalFee     Int
+  discountedFee   Int
+  
+  brochureUrl     String?  // PDF or Image File upload link
+  feeStructureUrl String?  // PDF or Image File upload link
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model GalleryImage {
+  id         String   @id @default(uuid())
+  collegeId  String
+  college    College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  imageUrl   String
+  caption    String?
+}
+
+model Ranking {
+  id         String   @id @default(uuid())
+  collegeId  String
+  college    College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  
+  agency     String   // e.g. "NIRF"
+  rank       Int
+  year       Int
+}
+
+model GlobalSetting {
+  id             String   @id @default("GLOBAL")
+  banners        String[]
+  contactEmail   String?
+  contactPhone   String?
+  emailTemplates String?  @db.Text
+  updatedAt      DateTime @updatedAt
+}
+
+model Lead {
+  phone              String    @id
+  studentName        String
+  email              String?
+  highSchoolPercent  Float
+  interestedStream   String
+  enquiries          Enquiry[]
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model Enquiry {
+  id        String   @id @default(uuid())
+  leadPhone String
+  lead      Lead     @relation(fields: [leadPhone], references: [phone], onDelete: Cascade)
+  collegeId String
+  college   College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  status    Status   @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Status {
+  PENDING
+  CALLED
+  INTERESTED
+  ADMITTED
+}
+
+model Degree {
+  id        String   @id @default(uuid())
+  name      String   @unique // e.g. "B.Tech"
+  slug      String   @unique // e.g. "b-tech"
+  courses   Course[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model University {
+  id        String   @id @default(uuid())
+  name      String   @unique // Full Name: "Rajasthan Technical University"
+  shortName String?  // "RTU"
+  slug      String   @unique
+  colleges  College[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Accreditation {
+  id        String   @id @default(uuid())
+  collegeId String
+  college   College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  
+  label     String   // "NAAC", "NBA", "REAP Code"
+  value     String   // "A++", "Accredited", "007"
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Deadline {
+  id        String   @id @default(uuid())
+  collegeId String
+  college   College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  
+  event     String   // "Application Start", "Counseling Date"
+  date      DateTime
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Faq {
+  id        String   @id @default(uuid())
+  collegeId String
+  college   College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  
+  question  String   @db.Text
+  answer    String   @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
