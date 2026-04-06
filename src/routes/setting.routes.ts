@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import { getSettings, updateSettings } from '../controllers/setting.controller.js';
+import { getGlobalSettings, updateGlobalSettings } from '../controllers/setting.controller.js';
 import { protectRoute, requireAdmin } from '../middlewares/authMiddleware.js';
 
 const router = Router();
 
-// Everyone can view global settings
-router.get('/', getSettings);
+// Public route to fetch footer data, logo, etc.
+router.get('/', getGlobalSettings);
 
-// Only admins can push global updates
-router.put('/', protectRoute, requireAdmin, updateSettings);
+// Protected routes for CMS administration
+router.put('/', protectRoute, requireAdmin, updateGlobalSettings);
 
 export default router;

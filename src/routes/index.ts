@@ -7,6 +7,8 @@ import settingRoutes from './setting.routes.js';
 import uploadRoutes from './upload.routes.js';
 import degreeRoutes from './degree.routes.js';
 import universityRoutes from './university.routes.js';
+import bannerRoutes from './banner.routes.js';
+import specializationRoutes from './specialization.routes.js';
 
 const router = Router();
 
@@ -17,6 +19,8 @@ router.use('/settings', settingRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/degrees', degreeRoutes);
 router.use('/universities', universityRoutes);
+router.use('/banners', bannerRoutes);
+router.use('/specializations', specializationRoutes);
 
 /**
  * @swagger

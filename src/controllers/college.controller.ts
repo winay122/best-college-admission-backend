@@ -7,13 +7,58 @@ import { removeLocalFile } from '../utils/fileRemover.js';
 ========================================================= */
 export const getColleges = async (req: Request, res: Response) => {
   try {
+    const { 
+      degreeId, 
+      specializationId, 
+      city, 
+      state, 
+      ownershipType, 
+      minFee, 
+      maxFee,
+      search 
+    } = req.query;
+
+    const where: any = {};
+
+    // Text Search
+    if (search) {
+      where.OR = [
+        { name: { contains: String(search), mode: 'insensitive' } },
+        { city: { contains: String(search), mode: 'insensitive' } }
+      ];
+    }
+
+    // Categorical Filters
+    if (city) where.city = String(city);
+    if (state) where.state = String(state);
+    if (ownershipType) where.ownershipType = String(ownershipType);
+
+    // Degree & Specialization Filters (Nested in courses)
+    if (degreeId || specializationId || minFee || maxFee) {
+      where.courses = {
+        some: {
+          ...(degreeId && { degreeId: String(degreeId) }),
+          ...(specializationId && { specializationId: String(specializationId) }),
+          ...( (minFee || maxFee) && {
+            discountedFee: {
+              ...(minFee && { gte: Number(minFee) }),
+              ...(maxFee && { lte: Number(maxFee) })
+            }
+          })
+        }
+      };
+    }
+
     const colleges = await prisma.college.findMany({
+      where,
       include: { 
         info: true, 
         placement: true, 
         rankings: true, 
         galleries: true, 
-        courses: true,
+        courses: {
+          include: { degree: true, specialization: true }
+        },
         university: true,
         accreditations: true,
         deadlines: true,
@@ -51,11 +96,19 @@ export const getCollegeById = async (req: Request, res: Response) => {
 
 export const createCollege = async (req: Request, res: Response) => {
   try {
-    const { name, city, state, logoUrl, priorityScore, facilities, hostelAvailable, universityId, collegeType } = req.body;
+    const { 
+      name, city, state, logoUrl, priorityScore, facilities, 
+      hostelAvailable, universityId, collegeType, ownershipType, rating 
+    } = req.body;
     
     const college = await prisma.college.create({
       data: {
-        name, city, state, logoUrl, priorityScore: Number(priorityScore || 0), facilities: facilities || [], hostelAvailable: hostelAvailable || false,
+        name, city, state, logoUrl, 
+        priorityScore: Number(priorityScore || 0), 
+        rating: Number(rating || 0),
+        ownershipType,
+        facilities: facilities || [], 
+        hostelAvailable: hostelAvailable || false,
         universityId,
         collegeType,
         info: { create: { aboutHtml: '', highlightsHtml: '', admissionsHtml: '', scholarshipHtml: '' } },
@@ -70,7 +123,10 @@ export const createCollege = async (req: Request, res: Response) => {
 
 export const updateCollege = async (req: Request, res: Response) => {
   try {
-    const { name, city, state, logoUrl, priorityScore, facilities, hostelAvailable, universityId, collegeType } = req.body;
+    const { 
+      name, city, state, logoUrl, priorityScore, facilities, 
+      hostelAvailable, universityId, collegeType, ownershipType, rating 
+    } = req.body;
     
     if (logoUrl) {
       const old = await prisma.college.findUnique({ where: { id: req.params.id } });
@@ -82,6 +138,8 @@ export const updateCollege = async (req: Request, res: Response) => {
       data: { 
         name, city, state, logoUrl, 
         priorityScore: Number(priorityScore), 
+        rating: Number(rating),
+        ownershipType,
         facilities, 
         hostelAvailable,
         universityId,
@@ -137,12 +195,19 @@ export const updatePlacement = async (req: Request, res: Response) => {
 ========================================================= */
 export const addCourse = async (req: Request, res: Response) => {
   try {
-    const { name, duration, eligibility, originalFee, discountedFee, brochureUrl, feeStructureUrl, degreeId } = req.body;
+    const { name, duration, eligibility, originalFee, discountedFee, brochureUrl, feeStructureUrl, degreeId, specializationId } = req.body;
     const course = await prisma.course.create({
       data: {
-        collegeId: req.params.id, name, duration, eligibility, brochureUrl, feeStructureUrl,
-        originalFee: Number(originalFee), discountedFee: Number(discountedFee),
-        ...(degreeId && { degreeId })
+        collegeId: req.params.id, 
+        name, 
+        duration, 
+        eligibility, 
+        brochureUrl, 
+        feeStructureUrl,
+        originalFee: Number(originalFee || 0), 
+        discountedFee: Number(discountedFee || 0),
+        ...(degreeId && { degreeId }),
+        ...(specializationId && { specializationId })
       }
     });
     res.json({ success: true, data: course });
@@ -153,7 +218,7 @@ export const addCourse = async (req: Request, res: Response) => {
 
 export const updateCourse = async (req: Request, res: Response) => {
   try {
-    const { name, duration, eligibility, originalFee, discountedFee, brochureUrl, feeStructureUrl, degreeId } = req.body;
+    const { name, duration, eligibility, originalFee, discountedFee, brochureUrl, feeStructureUrl, degreeId, specializationId } = req.body;
 
     // Pre-emptively sweep the storage for old PDF/Media files if we are uploading new ones
     if (brochureUrl || feeStructureUrl) {
@@ -171,11 +236,16 @@ export const updateCourse = async (req: Request, res: Response) => {
     const course = await prisma.course.update({
       where: { id: req.params.courseId },
       data: {
-        name, duration, eligibility,
-        originalFee: Number(originalFee), discountedFee: Number(discountedFee),
-        ...(degreeId && { degreeId }),
-        ...(brochureUrl && { brochureUrl }), // explicitly only override if a new URL is sent
-        ...(feeStructureUrl && { feeStructureUrl })
+        name, 
+        duration, 
+        eligibility,
+        originalFee: Number(originalFee || 0), 
+        discountedFee: Number(discountedFee || 0),
+        degreeId: degreeId || null,
+        specializationId: specializationId || null,
+        // We only update brochures if they are explicitly passed in the request body (including empty strings for clearing)
+        ...(brochureUrl !== undefined && { brochureUrl }),
+        ...(feeStructureUrl !== undefined && { feeStructureUrl })
       }
     });
     res.json({ success: true, data: course });

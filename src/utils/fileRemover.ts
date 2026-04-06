@@ -10,15 +10,17 @@ export const removeLocalFile = (fileUrl: string | null | undefined) => {
 
   try {
     // Only attempt to delete if it's explicitly locally routed via /uploads/
-    if (fileUrl.includes('/uploads/')) {
-      const filename = fileUrl.split('/uploads/')[1];
+    if (fileUrl.includes("/uploads/")) {
+      const filename = fileUrl.split("/uploads/")[1];
       if (!filename) return;
 
-      const filePath = path.join(process.cwd(), 'uploads', filename);
-      
+      const filePath = path.join(process.cwd(), "public", "uploads", filename);
+
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
-        console.log(`[Storage Cleanup] Successfully removed physical file: ${filename}`);
+        console.log(
+          `[Storage Cleanup] Successfully removed physical file: ${filename}`,
+        );
       }
     }
   } catch (error) {

@@ -14,11 +14,11 @@ const router = Router();
 
 // Base College CRUD
 router.route('/')
-  .get(protectRoute, getColleges)
+  .get(getColleges)
   .post(protectRoute, requireAdmin, createCollege);
 
 router.route('/:id')
-  .get(protectRoute, getCollegeById)
+  .get(getCollegeById)
   .put(protectRoute, requireAdmin, updateCollege)
   .delete(protectRoute, requireAdmin, deleteCollege);
 

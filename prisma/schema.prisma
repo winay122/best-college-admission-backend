@@ -30,6 +30,8 @@ model College {
   
   // High-Level Display
   priorityScore       Int        @default(0)
+  rating              Float      @default(0.0)
+  ownershipType       String?    // e.g. "Private", "Public", "Government"
   status              CollegeStatus @default(PUBLISHED)
   
   // 1:1 Encapsulated Relations
@@ -93,6 +95,9 @@ model Course {
   degreeId        String?  // Made optional momentarily to preserve existing ghost-row DB data
   degree          Degree?  @relation(fields: [degreeId], references: [id], onDelete: SetNull)
   
+  specializationId String?
+  specialization   Specialization? @relation(fields: [specializationId], references: [id], onDelete: SetNull)
+  
   name            String
   duration        String?
   eligibility     String?  @db.Text
@@ -126,10 +131,19 @@ model Ranking {
 
 model GlobalSetting {
   id             String   @id @default("GLOBAL")
-  banners        String[]
+  banners        String[] // Deprecated: moving to Banner model
   contactEmail   String?
   contactPhone   String?
+  officeHours    String?
+  officeAddress  String?  @db.Text
   emailTemplates String?  @db.Text
+  
+  // Footer & Branding Details
+  logoUrl        String?
+  footerAbout    String?  @db.Text
+  copyrightText  String?
+  socialLinks    String?  @db.Text // JSON stringified array of links
+  
   updatedAt      DateTime @updatedAt
 }
 
@@ -166,6 +180,18 @@ model Degree {
   id        String   @id @default(uuid())
   name      String   @unique // e.g. "B.Tech"
   slug      String   @unique // e.g. "b-tech"
+  courses   Course[]
+  specializations Specialization[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Specialization {
+  id        String   @id @default(uuid())
+  degreeId  String
+  degree    Degree   @relation(fields: [degreeId], references: [id], onDelete: Cascade)
+  name      String   // e.g. "Computer Science", "Mechanical"
+  slug      String   @unique // e.g. "computer-science"
   courses   Course[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -215,4 +241,17 @@ model Faq {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Banner {
+  id          String   @id @default(uuid())
+  imageUrl    String
+  title       String?
+  subTitle    String?  @db.Text
+  linkUrl     String?  // The URL CTA redirects to
+  isActive    Boolean  @default(true)
+  orderIndex  Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

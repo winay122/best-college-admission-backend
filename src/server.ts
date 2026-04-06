@@ -15,16 +15,22 @@ dotenv.config();
 
 // 2. Bootstrap Express App
 const app = express();
-app.use('/uploads', express.static('public/uploads'));
 
-// 3. Security & Logging Middlewares
-app.use(helmet());               // Secure HTTP Headers
-app.use(cors());                 // Cross-Origin Resource Sharing
-app.use(express.json());         // Parse JSON payloads
-app.use(morgan('dev'));          // Log incoming HTTP requests
+// 3. Global Identity & Security Middlewares (Must be at top for static routes)
+app.use(cors()); // Cross-Origin Resource Sharing
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false, // Allows images to be loaded by different origins (User Portal)
+  }),
+);
+app.use(express.json()); // Parse JSON payloads
+app.use(morgan("dev")); // Log incoming HTTP requests
 
-// 4. Rate Limiter (Apply strictly to API scopes)
-app.use('/api/', apiLimiter);
+// 4. Static Media Distribution
+app.use("/uploads", express.static("public/uploads"));
+
+// 5. Rate Limiter (Apply strictly to API scopes)
+app.use("/api/", apiLimiter);
 
 // 5. API Documentation (Swagger)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));

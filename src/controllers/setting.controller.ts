@@ -1,36 +1,69 @@
 import { Request, Response } from 'express';
-import prisma from '../config/db.js';
+import { PrismaClient } from '@prisma/client';
+import fs from 'fs/promises';
+import path from 'path';
 
-export const getSettings = async (req: Request, res: Response) => {
+const prisma = new PrismaClient();
+
+// Get the Singleton Global Settings (Public endpoint for frontend)
+export const getGlobalSettings = async (req: Request, res: Response): Promise<void> => {
   try {
-    const settings = await prisma.globalSetting.findUnique({ where: { id: 'GLOBAL' } });
+    const settings = await prisma.globalSetting.findUnique({
+      where: { id: "GLOBAL" }
+    });
     
     if (!settings) {
-      // Fallback instance initialization logic
-      const defaultSettings = await prisma.globalSetting.create({
-        data: { id: 'GLOBAL', banners: [] }
+      // If it doesn't exist, create an empty one
+      const newSettings = await prisma.globalSetting.create({
+        data: { id: "GLOBAL" }
       });
-      return res.json({ success: true, data: defaultSettings });
+      res.status(200).json({ success: true, data: newSettings });
+      return;
     }
     
-    res.json({ success: true, data: settings });
+    res.status(200).json({ success: true, data: settings });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 };
 
-export const updateSettings = async (req: Request, res: Response) => {
+// Update Global Settings (Admin Only)
+export const updateGlobalSettings = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { banners, contactEmail, contactPhone, emailTemplates } = req.body;
+    const { contactEmail, contactPhone, officeHours, officeAddress, logoUrl, footerAbout, copyrightText, socialLinks } = req.body;
     
+    // FETCH THE CURRENT STATE TO CHECK FOR LOGO REPLACEMENT/DELETE OLD UPLOADS
+    const currentSettings = await prisma.globalSetting.findUnique({
+      where: { id: "GLOBAL" }
+    });
+
+    if (currentSettings && currentSettings.logoUrl && currentSettings.logoUrl !== logoUrl) {
+      // If the old logo was an upload (contains /uploads/), delete it
+      if (currentSettings.logoUrl.includes('/uploads/')) {
+        try {
+          // Extract filename from the URL (handles both full URLs and relative paths)
+          const urlParts = currentSettings.logoUrl.split('/');
+          const filename = urlParts[urlParts.length - 1];
+          const physicalPath = path.join(process.cwd(), 'public', 'uploads', filename);
+          
+          await fs.access(physicalPath); // Check if file exists
+          await fs.unlink(physicalPath); // Delete it
+          console.log(`Successfully purged old Master Logo: ${filename}`);
+        } catch (unlinkError) {
+          // Log but don't crash if file is already missing
+          console.warn('Could not delete old logo file (might have been manually moved)', unlinkError);
+        }
+      }
+    }
+
     const settings = await prisma.globalSetting.upsert({
-      where: { id: 'GLOBAL' },
-      update: { banners, contactEmail, contactPhone, emailTemplates },
-      create: { id: 'GLOBAL', banners: banners || [], contactEmail, contactPhone, emailTemplates }
+      where: { id: "GLOBAL" },
+      update: { contactEmail, contactPhone, officeHours, officeAddress, logoUrl, footerAbout, copyrightText, socialLinks },
+      create: { id: "GLOBAL", contactEmail, contactPhone, officeHours, officeAddress, logoUrl, footerAbout, copyrightText, socialLinks },
     });
     
-    res.json({ success: true, data: settings });
+    res.status(200).json({ success: true, data: settings });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 };

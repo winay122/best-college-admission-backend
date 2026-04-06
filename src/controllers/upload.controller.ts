@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { removeLocalFile } from '../utils/fileRemover.js';
 
 export const uploadMedia = (req: Request, res: Response) => {
   try {
@@ -18,6 +19,20 @@ export const uploadMedia = (req: Request, res: Response) => {
         mimetype: req.file.mimetype,
       }
     });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const deleteMedia = (req: Request, res: Response) => {
+  try {
+    const { url } = req.body;
+    if (!url) {
+      return res.status(400).json({ success: false, error: 'URL is required' });
+    }
+
+    removeLocalFile(url);
+    res.status(200).json({ success: true, message: 'File deleted if existed' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
