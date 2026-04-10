@@ -30,7 +30,7 @@ export const getGlobalSettings = async (req: Request, res: Response): Promise<vo
 // Update Global Settings (Admin Only)
 export const updateGlobalSettings = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { contactEmail, contactPhone, officeHours, officeAddress, logoUrl, footerAbout, copyrightText, socialLinks } = req.body;
+    const { contactEmail, contactPhone, officeHours, officeAddress, logoUrl, footerAbout, copyrightText, socialLinks, availableFacilities } = req.body;
     
     // FETCH THE CURRENT STATE TO CHECK FOR LOGO REPLACEMENT/DELETE OLD UPLOADS
     const currentSettings = await prisma.globalSetting.findUnique({
@@ -58,8 +58,8 @@ export const updateGlobalSettings = async (req: Request, res: Response): Promise
 
     const settings = await prisma.globalSetting.upsert({
       where: { id: "GLOBAL" },
-      update: { contactEmail, contactPhone, officeHours, officeAddress, logoUrl, footerAbout, copyrightText, socialLinks },
-      create: { id: "GLOBAL", contactEmail, contactPhone, officeHours, officeAddress, logoUrl, footerAbout, copyrightText, socialLinks },
+      update: { contactEmail, contactPhone, officeHours, officeAddress, logoUrl, footerAbout, copyrightText, socialLinks, availableFacilities },
+      create: { id: "GLOBAL", contactEmail, contactPhone, officeHours, officeAddress, logoUrl, footerAbout, copyrightText, socialLinks, availableFacilities: availableFacilities || [] },
     });
     
     res.status(200).json({ success: true, data: settings });

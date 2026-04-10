@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import {
-  getColleges, getCollegeById, createCollege, updateCollege, deleteCollege,
+  getColleges, getCollegeById, getCollegeBySlug, createCollege, updateCollege, deleteCollege,
   updateInfo, updatePlacement,
   addCourse, updateCourse, deleteCourse,
   addGallery, deleteGallery,
   addAccreditation, deleteAccreditation,
   addDeadline, deleteDeadline,
-  addFAQ, deleteFAQ
+  addFAQ, deleteFAQ,
+  addRecruiter, deleteRecruiter
 } from '../controllers/college.controller.js';
 import { protectRoute, requireAdmin } from '../middlewares/authMiddleware.js';
 
@@ -21,6 +22,8 @@ router.route('/:id')
   .get(getCollegeById)
   .put(protectRoute, requireAdmin, updateCollege)
   .delete(protectRoute, requireAdmin, deleteCollege);
+
+router.get('/slug/:slug', getCollegeBySlug);
 
 // Micro-Component Injection Endpoints
 router.put('/:id/info', protectRoute, requireAdmin, updateInfo);
@@ -43,5 +46,9 @@ router.delete('/:id/deadlines/:deadlineId', protectRoute, requireAdmin, deleteDe
 // FAQs
 router.post('/:id/faqs', protectRoute, requireAdmin, addFAQ);
 router.delete('/:id/faqs/:faqId', protectRoute, requireAdmin, deleteFAQ);
+
+// Recruiters / Hiring Partners
+router.post('/:id/recruiters', protectRoute, requireAdmin, addRecruiter);
+router.delete('/:id/recruiters/:recruiterId', protectRoute, requireAdmin, deleteRecruiter);
 
 export default router;

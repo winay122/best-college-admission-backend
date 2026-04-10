@@ -9,6 +9,7 @@ import degreeRoutes from './degree.routes.js';
 import universityRoutes from './university.routes.js';
 import bannerRoutes from './banner.routes.js';
 import specializationRoutes from './specialization.routes.js';
+import facilityRoutes from './facility.routes.js';
 
 const router = Router();
 
@@ -21,6 +22,7 @@ router.use('/degrees', degreeRoutes);
 router.use('/universities', universityRoutes);
 router.use('/banners', bannerRoutes);
 router.use('/specializations', specializationRoutes);
+router.use('/facilities', facilityRoutes);
 
 /**
  * @swagger

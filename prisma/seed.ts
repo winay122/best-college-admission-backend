@@ -125,6 +125,7 @@ async function main() {
   const colleges = [
     {
       name: 'RVS College of Engineering',
+      slug: 'rvs-college-engineering',
       city: 'Coimbatore',
       state: 'Tamil Nadu',
       logoUrl: 'https://via.placeholder.com/150?text=RVS+Logo',
@@ -145,6 +146,7 @@ async function main() {
     },
     {
       name: 'Apex Institute of Management',
+      slug: 'apex-institute-management',
       city: 'Jaipur',
       state: 'Rajasthan',
       logoUrl: 'https://via.placeholder.com/150?text=Apex+Logo',
@@ -165,6 +167,7 @@ async function main() {
     },
     {
       name: 'Jaipur Law College',
+      slug: 'jaipur-law-college',
       city: 'Jaipur',
       state: 'Rajasthan',
       logoUrl: 'https://via.placeholder.com/150?text=Law+Logo',
@@ -210,8 +213,8 @@ async function main() {
             update: {
               highestPackage: c.data.highest,
               averagePackage: c.data.avg,
-              placementPercent: 90,
-              topRecruiters: c.data.recruiters
+              placementPercent: 90
+              // Recruiters managed separately for complexity
             }
           }
         }
@@ -220,6 +223,7 @@ async function main() {
       await prisma.college.create({
         data: {
           name: c.name,
+          slug: c.slug,
           city: c.city,
           state: c.state,
           logoUrl: c.logoUrl,
@@ -240,7 +244,9 @@ async function main() {
               highestPackage: c.data.highest,
               averagePackage: c.data.avg,
               placementPercent: 90,
-              topRecruiters: c.data.recruiters
+              recruiters: {
+                create: c.data.recruiters.map(r => ({ name: r }))
+              }
             }
           },
           courses: {

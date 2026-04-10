@@ -21,9 +21,19 @@ enum Role {
   STAFF
 }
 
+model Facility {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  icon      String?  // Name of the lucide-react icon (e.g. "Wifi")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model College {
   id                  String     @id @default(uuid())
   name                String
+  slug                String     @unique
   city                String
   state               String
   logoUrl             String
@@ -33,6 +43,11 @@ model College {
   rating              Float      @default(0.0)
   ownershipType       String?    // e.g. "Private", "Public", "Government"
   status              CollegeStatus @default(PUBLISHED)
+  
+  // SEO Metadata (Dedicated for Search Engines)
+  seoTitle            String?
+  seoDescription      String?    @db.Text
+  seoKeywords         String?    @db.Text
   
   // 1:1 Encapsulated Relations
   info                CollegeInfo?
@@ -56,6 +71,8 @@ model College {
   facilities          String[]
   hostelAvailable     Boolean    @default(false)
   
+  overallBrochureUrl  String?    // Link to main institutional prospectus
+  
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
 }
@@ -77,14 +94,26 @@ model CollegeInfo {
 }
 
 model Placement {
-  id              String   @id @default(uuid())
-  collegeId       String   @unique
-  college         College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  id              String      @id @default(uuid())
+  collegeId       String      @unique
+  college         College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   
   highestPackage   Float?
   averagePackage   Float?
   placementPercent Float?
-  topRecruiters    String[]
+  recruiters       Recruiter[]
+}
+
+model Recruiter {
+  id          String    @id @default(uuid())
+  placementId String
+  placement   Placement @relation(fields: [placementId], references: [id], onDelete: Cascade)
+  
+  name        String
+  logoUrl     String?   // URL or path to company logo image
+  website     String?   // Link to company website
+  
+  createdAt   DateTime  @default(now())
 }
 
 model Course {
@@ -143,6 +172,7 @@ model GlobalSetting {
   footerAbout    String?  @db.Text
   copyrightText  String?
   socialLinks    String?  @db.Text // JSON stringified array of links
+  availableFacilities String[] 
   
   updatedAt      DateTime @updatedAt
 }
