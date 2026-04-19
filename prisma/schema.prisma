@@ -184,8 +184,23 @@ model Lead {
   highSchoolPercent  Float
   interestedStream   String
   enquiries          Enquiry[]
+  chatMessages       ChatMessage[]
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  leadPhone String
+  lead      Lead     @relation(fields: [leadPhone], references: [phone], onDelete: Cascade)
+  sender    Sender   @default(LEAD)
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+}
+
+enum Sender {
+  LEAD
+  ADMIN
 }
 
 model Enquiry {

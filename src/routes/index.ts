@@ -10,6 +10,7 @@ import universityRoutes from './university.routes.js';
 import bannerRoutes from './banner.routes.js';
 import specializationRoutes from './specialization.routes.js';
 import facilityRoutes from './facility.routes.js';
+import chatRoutes from './chat.routes.js';
 
 const router = Router();
 
@@ -23,6 +24,7 @@ router.use('/universities', universityRoutes);
 router.use('/banners', bannerRoutes);
 router.use('/specializations', specializationRoutes);
 router.use('/facilities', facilityRoutes);
+router.use('/chat', chatRoutes);
 
 /**
  * @swagger

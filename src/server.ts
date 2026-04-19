@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
+import { createServer } from 'http';
+import { initSocket } from './services/socket.service.js';
 
 // Application Imports
 import { swaggerDocs } from './config/swagger.js';
@@ -15,33 +17,37 @@ dotenv.config();
 
 // 2. Bootstrap Express App
 const app = express();
+const httpServer = createServer(app);
 
-// 3. Global Identity & Security Middlewares (Must be at top for static routes)
-app.use(cors()); // Cross-Origin Resource Sharing
+// 3. Initialize Real-Time Engine (Socket.io)
+initSocket(httpServer);
+
+// 4. Global Identity & Security Middlewares
+app.use(cors()); 
 app.use(
   helmet({
-    crossOriginResourcePolicy: false, // Allows images to be loaded by different origins (User Portal)
+    crossOriginResourcePolicy: false,
   }),
 );
-app.use(express.json()); // Parse JSON payloads
-app.use(morgan("dev")); // Log incoming HTTP requests
+app.use(express.json());
+app.use(morgan("dev"));
 
-// 4. Static Media Distribution
+// 5. Static Media Distribution
 app.use("/uploads", express.static("public/uploads"));
 
-// 5. Rate Limiter (Apply strictly to API scopes)
+// 6. Rate Limiter
 app.use("/api/", apiLimiter);
 
-// 5. API Documentation (Swagger)
+// 7. API Documentation (Swagger)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// 6. Register Application Routes
+// 8. Register Application Routes
 app.use('/api', mainRouter);
 
-// 7. Start the Server
+// 9. Start the Server
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running flawlessly on port ${PORT}`);
+httpServer.listen(PORT, () => {
+  console.log(`🚀 Server with Real-Time Chat is running on port ${PORT}`);
   console.log(`📚 Swagger Docs available at http://localhost:${PORT}/api-docs`);
 });
