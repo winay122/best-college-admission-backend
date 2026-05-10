@@ -23,19 +23,19 @@ export const initSocket = (server: HTTPServer) => {
 
     // Admin joins the global admin monitoring room or specific user room
     socket.on('admin:join', (phone?: string) => {
-        if (phone) {
-            socket.join(phone);
-            console.log(`👑 Admin joined room: ${phone}`);
-        } else {
-            socket.join('admin-inbox');
-            console.log(`👑 Admin joined global inbox`);
-        }
+      if (phone) {
+        socket.join(phone);
+        console.log(`👑 Admin joined room: ${phone}`);
+      } else {
+        socket.join('admin-inbox');
+        console.log(`👑 Admin joined global inbox`);
+      }
     });
 
     // User sends a message
     socket.on('user:message', async (data: { phone: string; content: string }) => {
       const { phone, content } = data;
-      
+
       try {
         // Persist to DB
         const message = await prisma.chatMessage.create({
@@ -44,15 +44,19 @@ export const initSocket = (server: HTTPServer) => {
             content: content,
             sender: 'LEAD',
           },
+          include: {
+            lead: true
+          }
         });
 
         // Broadcast to user's room (so other devices see it) AND admin inbox
         io.to(phone).emit('message:new', message);
         io.to('admin-inbox').emit('admin:new-notification', {
-            phone,
-            message: message
+          phone,
+          message: message,
+          lead: message.lead
         });
-        
+
         console.log(`✉️ Message from ${phone}: ${content}`);
       } catch (error) {
         console.error('❌ Error saving user message:', error);
@@ -62,7 +66,7 @@ export const initSocket = (server: HTTPServer) => {
     // Admin sends a message
     socket.on('admin:message', async (data: { phone: string; content: string }) => {
       const { phone, content } = data;
-      
+
       try {
         // Persist to DB
         const message = await prisma.chatMessage.create({
