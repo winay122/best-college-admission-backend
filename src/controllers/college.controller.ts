@@ -16,7 +16,8 @@ export const getColleges = async (req: Request, res: Response) => {
       ownershipType,
       minFee,
       maxFee,
-      search
+      search,
+      sort
     } = req.query;
 
     const where: any = {};
@@ -36,8 +37,8 @@ export const getColleges = async (req: Request, res: Response) => {
     }
 
     // Categorical Filters
-    if (city) where.city = String(city);
-    if (state) where.state = String(state);
+    if (city) where.city = { contains: String(city), mode: 'insensitive' };
+    if (state) where.state = { contains: String(state), mode: 'insensitive' };
     if (ownershipType) where.ownershipType = String(ownershipType);
 
     // Degree & Specialization Filters (Nested in courses)
@@ -56,6 +57,13 @@ export const getColleges = async (req: Request, res: Response) => {
       };
     }
 
+    const orderBy: any = {};
+    if (sort === 'rating') {
+      orderBy.rating = 'desc';
+    } else {
+      orderBy.priorityScore = 'desc';
+    }
+
     const colleges = await prisma.college.findMany({
       where,
       include: {
@@ -71,7 +79,7 @@ export const getColleges = async (req: Request, res: Response) => {
         deadlines: true,
         faqs: true
       },
-      orderBy: { priorityScore: 'desc' }
+      orderBy
     });
     res.json({ success: true, data: colleges });
   } catch (error: any) {

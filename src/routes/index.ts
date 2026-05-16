@@ -8,10 +8,12 @@ import uploadRoutes from './upload.routes.js';
 import degreeRoutes from './degree.routes.js';
 import universityRoutes from './university.routes.js';
 import bannerRoutes from './banner.routes.js';
+import newsRoutes from './news.routes.js';
 import specializationRoutes from './specialization.routes.js';
 import facilityRoutes from './facility.routes.js';
 import chatRoutes from './chat.routes.js';
 import dashboardRoutes from './dashboard.routes.js';
+import staticPageRoutes from './static-page.routes.js';
 
 const router = Router();
 
@@ -23,10 +25,12 @@ router.use('/upload', uploadRoutes);
 router.use('/degrees', degreeRoutes);
 router.use('/universities', universityRoutes);
 router.use('/banners', bannerRoutes);
+router.use('/news', newsRoutes);
 router.use('/specializations', specializationRoutes);
 router.use('/facilities', facilityRoutes);
 router.use('/chat', chatRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/pages', staticPageRoutes);
 
 /**
  * @swagger
