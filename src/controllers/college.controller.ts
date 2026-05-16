@@ -21,11 +21,17 @@ export const getColleges = async (req: Request, res: Response) => {
 
     const where: any = {};
 
-    // Text Search
+    // Text Search — matches college name, city, state, or any course/degree name
     if (search) {
       where.OR = [
         { name: { contains: String(search), mode: 'insensitive' } },
-        { city: { contains: String(search), mode: 'insensitive' } }
+        { city: { contains: String(search), mode: 'insensitive' } },
+        { state: { contains: String(search), mode: 'insensitive' } },
+        { collegeType: { contains: String(search), mode: 'insensitive' } },
+        // Match colleges that have a course whose name contains the search term
+        { courses: { some: { name: { contains: String(search), mode: 'insensitive' } } } },
+        // Match colleges that have a course whose degree name contains the search term (e.g. "B.Tech", "MBA")
+        { courses: { some: { degree: { name: { contains: String(search), mode: 'insensitive' } } } } },
       ];
     }
 

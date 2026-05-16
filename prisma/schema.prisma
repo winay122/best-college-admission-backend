@@ -225,6 +225,7 @@ model Degree {
   id        String   @id @default(uuid())
   name      String   @unique // e.g. "B.Tech"
   slug      String   @unique // e.g. "b-tech"
+  sortOrder Int      @default(0) // Controls display order on the User Portal carousel
   courses   Course[]
   specializations Specialization[]
   createdAt DateTime @default(now())
