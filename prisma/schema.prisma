@@ -43,6 +43,7 @@ model College {
   rating              Float      @default(0.0)
   ownershipType       String?    // e.g. "Private", "Public", "Government"
   status              CollegeStatus @default(PUBLISHED)
+  offerText           String?    // e.g. "20% Off", "Hot Deal", "Special Offer"
   
   // SEO Metadata (Dedicated for Search Engines)
   seoTitle            String?
@@ -207,8 +208,8 @@ model Enquiry {
   id        String   @id @default(uuid())
   leadPhone String
   lead      Lead     @relation(fields: [leadPhone], references: [phone], onDelete: Cascade)
-  collegeId String
-  college   College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  collegeId String?
+  college   College? @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   status    Status   @default(PENDING)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

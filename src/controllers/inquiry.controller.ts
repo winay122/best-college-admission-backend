@@ -6,9 +6,12 @@ export const createInquiry = async (req: Request, res: Response) => {
   try {
     const { studentName, phone, email, highSchoolPercent, interestedStream, collegeId } = req.body;
 
-    if (!phone || !collegeId) {
-      return res.status(400).json({ success: false, error: 'Phone number and College ID are required.' });
+    if (!phone) {
+      return res.status(400).json({ success: false, error: 'Phone number is required.' });
     }
+
+    // Map general inquiry strings or empty values to null
+    const resolvedCollegeId = collegeId && collegeId !== 'GLOBAL_CENTER' && collegeId !== '00000000-0000-0000-0000-000000000000' ? collegeId : null;
 
     // Use transaction to ensure Lead and Enquiry are created together
     const result = await prisma.$transaction(async (tx) => {
@@ -16,25 +19,25 @@ export const createInquiry = async (req: Request, res: Response) => {
       const lead = await tx.lead.upsert({
         where: { phone },
         update: {
-          studentName,
-          email,
-          highSchoolPercent: Number(highSchoolPercent),
-          interestedStream,
+          studentName: studentName || 'Interested Student',
+          email: email || null,
+          highSchoolPercent: highSchoolPercent ? Number(highSchoolPercent) : 0,
+          interestedStream: interestedStream || 'General',
         },
         create: {
           phone,
-          studentName,
-          email,
-          highSchoolPercent: Number(highSchoolPercent),
-          interestedStream,
+          studentName: studentName || 'Interested Student',
+          email: email || null,
+          highSchoolPercent: highSchoolPercent ? Number(highSchoolPercent) : 0,
+          interestedStream: interestedStream || 'General',
         },
       });
 
-      // 2. Create the Enquiry linked to this Lead and College
+      // 2. Create the Enquiry linked to this Lead (optional College link)
       const enquiry = await tx.enquiry.create({
         data: {
           leadPhone: lead.phone,
-          collegeId,
+          collegeId: resolvedCollegeId,
           status: 'PENDING',
         },
       });

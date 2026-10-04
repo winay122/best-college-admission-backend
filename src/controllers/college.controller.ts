@@ -145,7 +145,7 @@ export const createCollege = async (req: Request, res: Response) => {
     const {
       name, city, state, logoUrl, priorityScore, facilities,
       hostelAvailable, universityId, collegeType, ownershipType, rating,
-      seoTitle, seoDescription, seoKeywords, overallBrochureUrl
+      seoTitle, seoDescription, seoKeywords, overallBrochureUrl, offerText
     } = req.body;
 
     const college = await prisma.college.create({
@@ -164,6 +164,7 @@ export const createCollege = async (req: Request, res: Response) => {
         seoDescription,
         seoKeywords,
         overallBrochureUrl,
+        offerText: offerText || null,
         info: { create: { aboutHtml: '', highlightsHtml: '', admissionsHtml: '', scholarshipHtml: '' } },
         placement: { create: { highestPackage: null, averagePackage: null, placementPercent: null } }
       }
@@ -179,7 +180,7 @@ export const updateCollege = async (req: Request, res: Response) => {
     const {
       name, city, state, logoUrl, priorityScore, facilities,
       hostelAvailable, universityId, collegeType, ownershipType, rating,
-      seoTitle, seoDescription, seoKeywords, overallBrochureUrl
+      seoTitle, seoDescription, seoKeywords, overallBrochureUrl, offerText
     } = req.body;
 
     if (logoUrl) {
@@ -208,7 +209,8 @@ export const updateCollege = async (req: Request, res: Response) => {
         seoTitle,
         seoDescription,
         seoKeywords,
-        overallBrochureUrl
+        overallBrochureUrl,
+        offerText: offerText !== undefined ? (offerText || null) : undefined
       }
     });
     res.json({ success: true, data: updated });

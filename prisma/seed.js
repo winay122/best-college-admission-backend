@@ -10,36 +10,23 @@ async function main() {
     });
     // 2. Global Site Configuration
     const socialLinks = JSON.stringify([
-        { platform: 'facebook', label: 'Facebook', url: 'https://facebook.com/collegeselect' },
-        { platform: 'twitter', label: 'Twitter', url: 'https://twitter.com/collegeselect' },
-        { platform: 'instagram', label: 'Instagram', url: 'https://instagram.com/collegeselect' },
-        { platform: 'linkedin', label: 'LinkedIn', url: 'https://linkedin.com/company/collegeselect' }
+        { platform: 'facebook', label: 'Facebook', url: 'https://facebook.com/bestcollegeadmission' },
+        { platform: 'twitter', label: 'Twitter', url: 'https://twitter.com/bestcollegeadmission' },
+        { platform: 'instagram', label: 'Instagram', url: 'https://instagram.com/bestcollegeadmission' },
+        { platform: 'linkedin', label: 'LinkedIn', url: 'https://linkedin.com/company/bestcollegeadmission' }
     ]);
     await prisma.globalSetting.upsert({
         where: { id: 'GLOBAL' },
-        update: {
-            contactEmail: 'support@bestcollegeadmission.in',
-            contactPhone: '+91 98765 43210',
-            officeHours: 'Mon-Fri: 9AM to 6PM',
-            officeAddress: 'RIICO Industrial Area, Sitapura, Jaipur, Rajasthan 302022',
-            logoUrl: 'https://via.placeholder.com/200x60?text=CollegeSelect',
-            footerAbout: 'Your trusted partner in navigating higher education. Compare top colleges, explore detailed placement data, and apply with absolute confidence.',
-            copyrightText: '© 2026 CollegeSelect Platforms. All rights reserved.',
-            socialLinks: socialLinks,
-            banners: [
-                'https://via.placeholder.com/1200x400?text=2026+Admissions+Open',
-                'https://via.placeholder.com/1200x400?text=Top+Engineering+Colleges'
-            ]
-        },
+        update: {}, // Keep empty so customized production settings are never overwritten during seeding!
         create: {
             id: 'GLOBAL',
             contactEmail: 'support@bestcollegeadmission.in',
             contactPhone: '+91 98765 43210',
             officeHours: 'Mon-Fri: 9AM to 6PM',
             officeAddress: 'RIICO Industrial Area, Sitapura, Jaipur, Rajasthan 302022',
-            logoUrl: 'https://via.placeholder.com/200x60?text=CollegeSelect',
+            logoUrl: 'https://via.placeholder.com/200x60?text=BestCollegeAdmission',
             footerAbout: 'Your trusted partner in navigating higher education. Compare top colleges, explore detailed placement data, and apply with absolute confidence.',
-            copyrightText: '© 2026 CollegeSelect Platforms. All rights reserved.',
+            copyrightText: '© 2026 BestCollegeAdmission Platforms. All rights reserved.',
             socialLinks: socialLinks,
             banners: [
                 'https://via.placeholder.com/1200x400?text=2026+Admissions+Open'
